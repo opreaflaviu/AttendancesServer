@@ -9,24 +9,19 @@ from users_agg import UsersAgg
 
 app = Flask(__name__)
 
-app.config["MONGO_URI"] = 'mongodb://localhost:27017/UBB_App'
+# For development
+# app.config["MONGO_URI"] = 'mongodb://localhost:27017/UBB_App'
+
+# For production
+app.config["MONGO_URI"] = 'mongodb://linux.scs.ubbcluj.ro'
 
 mongo = PyMongo(app)
 
 
 @app.route('/users/add', methods=['POST'])
-def insert_user():
+def insert_student():
     user_agg = UsersAgg(mongo.db.users)
     response = user_agg.insert_student(request)
-    print("response", response)
-    return response
-
-
-@app.route('/users/login', methods=['POST'])
-def login_user():
-    user_agg = UsersAgg(mongo.db.users)
-    response = user_agg.login_student(request)
-    print("response", response)
     return response
 
 
@@ -34,7 +29,13 @@ def login_user():
 def insert_teacher():
     teachers_agg = TeachersAgg(mongo.db.teachers)
     response = teachers_agg.insert_teacher(request)
-    print("response", response)
+    return response
+
+
+@app.route('/users/login', methods=['POST'])
+def login_student():
+    user_agg = UsersAgg(mongo.db.users)
+    response = user_agg.login_student(request)
     return response
 
 
@@ -42,7 +43,6 @@ def insert_teacher():
 def login_teacher():
     teachers_agg = TeachersAgg(mongo.db.teachers)
     response = teachers_agg.login_teacher(request)
-    print("response", response)
     return response
 
 
@@ -52,24 +52,16 @@ def insert_attendance():
     return attendance_agg.insert_attendance(request)
 
 
-@app.route('/attendance/<user_id>', methods=['GET'])
-def get_student_attendances(user_id):
-    print(user_id)
-    attendance_agg = AttendanceAgg(mongo.db.attendance)
-    return attendance_agg.get_student_attendances(user_id)
-
-
 @app.route('/generated-attendance/add', methods=['POST'])
 def insert_generated_attendance():
     generated_attendance_agg = GeneratedAttendanceAgg(mongo.db.generatedAttendance)
     return generated_attendance_agg.insert_generated_attendance(request)
 
 
-@app.route('/attendance/get-student-attendance/<user_id>', methods=['GET'])
-def search_student_attendances(user_id):
-    print(user_id)
+@app.route('/attendance/<user_id>', methods=['GET'])
+def get_student_attendances(user_id):
     attendance_agg = AttendanceAgg(mongo.db.attendance)
-    return attendance_agg.search_student_attendances(user_id)
+    return attendance_agg.get_student_attendances(user_id)
 
 
 @app.route('/generated-attendance/<teacher_id>', methods=['GET'])
@@ -84,6 +76,13 @@ def get_students_at_course(course_qr):
     return attendance_agg.get_students_at_course(course_qr)
 
 
+@app.route('/attendance/get-student-attendance/<user_id>', methods=['GET'])
+def search_student_attendances(user_id):
+    attendance_agg = AttendanceAgg(mongo.db.attendance)
+    return attendance_agg.search_student_attendances(user_id)
+
+
+# Route for testing
 @app.route('/hello')
 def hello():
     print('hello')
