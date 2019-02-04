@@ -15,24 +15,22 @@ class TeachersAgg:
             'teacherId': str(teacher_id)[2:9],
         }
 
-        print(new_teacher)
-
         find = self.database.find_one({'teacherId': teacher_id})
         if find:
-            return json.dumps({'result': "{'inserted': False}"})
+            return json.dumps({'result': "{'inserted': false}"})
         else:
             self.database.insert(new_teacher)
-            return json.dumps({'result': "{'inserted': True}"})
+            return json.dumps({'result': "{'inserted': true}"})
 
     def login_teacher(self, request):
         teacher_id = request.form.get('teacherId'),
-        password = request.form.get('teacherPassword')
-        find = self.database.find_one({'teacherId': str(str(teacher_id)[2:9]), 'teacherPassword': str(password)})
+        find = self.database.find_one({'teacherId': str(str(teacher_id)[2:9])})
 
         if find:
             print(find)
             return json.dumps({'result': {
                 'teacherName': find['teacherName'],
+                'teacherPassword': find['teacherPassword']
             }})
         else:
             return json.dumps({'result': "false"})
