@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.config["MONGO_URI"] = 'mongodb://localhost:27017/UBB_App'
 
 # For production
-# app.config["MONGO_URI"] = 'mongodb://linux.scs.ubbcluj.ro/studentsStats'
+app.config["MONGO_URI"] = 'mongodb://linux.scs.ubbcluj.ro:27017/studentsStats'
 
 mongo = PyMongo(app)
 
@@ -89,5 +89,5 @@ def hello():
     return 'hello'
 
 if __name__ == '__main__':
-    app.run(host='192.168.0.133')
+    app.run(threaded=True)
     # app.run()
