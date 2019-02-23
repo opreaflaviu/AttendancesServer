@@ -1,7 +1,6 @@
 import json
 
 
-
 class UsersAgg:
     def __init__(self, database):
         self.database = database
@@ -28,20 +27,20 @@ class UsersAgg:
 
         find = self.database.find_one({'studentId': student_id})
         if find:
-            return json.dumps({'result': "{'inserted': False}"})
+            return json.dumps({'result': "{'inserted': false}"})
         else:
             self.database.insert(new_student)
-            return json.dumps({'result': "{'inserted': True}"})
+            return json.dumps({'result': "{'inserted': true}"})
 
     def login_student(self, request):
         student_id = request.form.get('studentId'),
-        password = request.form.get('studentPassword')
-        find = self.database.find_one({'studentId': str(str(student_id)[2:10]), 'studentPassword': str(password)})
+        find = self.database.find_one({'studentId': str(str(student_id)[2:10])})
 
         if find:
             return json.dumps({'result': {
                 'studentName': find['studentName'],
-                'classId': find['classId'],
+                'studentPassword': find['studentPassword'],
+                'classId': find['classId']
             }})
         else:
-            return json.dumps({'result': "false"})
+            return json.dumps({'result': 'false'})

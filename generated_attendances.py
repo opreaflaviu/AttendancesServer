@@ -34,7 +34,6 @@ class GeneratedAttendanceAgg:
         else:
             return json.dumps({'result': 'false'})
 
-
     def get_teacher_generated_attendances(self, teacher_id):
         pipeline = [
             {'$match': {
