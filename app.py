@@ -10,7 +10,7 @@ from users_agg import UsersAgg
 app = Flask(__name__)
 
 # For development
-app.config["MONGO_URI"] = 'mongodb://localhost:27017/UBB_App'
+# app.config["MONGO_URI"] = 'mongodb://localhost:27017/UBB_App'
 
 # For production
 app.config["MONGO_URI"] = 'mongodb://linux.scs.ubbcluj.ro:27017/studentsStats'
@@ -90,4 +90,3 @@ def hello():
 
 if __name__ == '__main__':
     app.run(threaded=True)
-    # app.run()
