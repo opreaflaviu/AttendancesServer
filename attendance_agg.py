@@ -91,7 +91,6 @@ class AttendanceAgg:
         for r in result:
             course_list = []
             for a in r["events"]:
-                print("aaa:", a)
                 course_data = {
                     'courseCreatedAt': str(a["courseCreatedAt"]),
                     'courseType': a["courseType"],
@@ -100,6 +99,7 @@ class AttendanceAgg:
                 }
                 course_list.append(course_data)
             attendance = {
+                # "courseName": r["courseName"],
                 "courseName": r["_id"],
                 "attendances": course_list
             }
@@ -144,7 +144,6 @@ class AttendanceAgg:
         ]
 
         result = self.database.aggregate(pipeline)
-        print(result)
         result_list = []
         for r in result:
             attendance = {
