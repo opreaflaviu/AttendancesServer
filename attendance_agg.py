@@ -71,26 +71,27 @@ class AttendanceAgg:
                 }
             },
 
-            {
-                '$addFields': {
-                    'courseName': '$_id',
-                    'attendances': '$events'
-                }
-            },
-
-            {
-                '$project': {
-                    '_id': 0,
-                    'events': 0
-                }
-            }
+            # {
+            #     '$addFields': {
+            #         'courseName': '$_id',
+            #         'attendances': '$events'
+            #     }
+            # },
+            #
+            # {
+            #     '$project': {
+            #         '_id': 0,
+            #         'events': 0
+            #     }
+            # }
         ]
 
         result = self.database.aggregate(pipeline)
         result_list = []
         for r in result:
             course_list = []
-            for a in r["attendances"]:
+            for a in r["events"]:
+                print("aaa:", a)
                 course_data = {
                     'courseCreatedAt': str(a["courseCreatedAt"]),
                     'courseType': a["courseType"],
@@ -99,7 +100,7 @@ class AttendanceAgg:
                 }
                 course_list.append(course_data)
             attendance = {
-                "courseName": r["courseName"],
+                "courseName": r["_id"],
                 "attendances": course_list
             }
 
@@ -122,27 +123,28 @@ class AttendanceAgg:
                 }
             },
 
-            {
-                '$addFields': {
-                    'courseName': '$course.courseName',
-                    'courseType': '$course.courseType',
-                    'courseTeacherName': '$course.courseTeacherName',
-                    'courseTeacherId': '$course.courseTeacherId',
-                    'courseCreatedAt': '$course.courseCreatedAt',
-                    'courseNumber': '$course.courseNumber',
-                }
-            },
-
-            {
-                '$project': {
-                    '_id': 0,
-                    'studentId': 0,
-                    'course': 0
-                }
-            }
+            # {
+            #     '$addFields': {
+            #         'courseName': '$course.courseName',
+            #         'courseType': '$course.courseType',
+            #         'courseTeacherName': '$course.courseTeacherName',
+            #         'courseTeacherId': '$course.courseTeacherId',
+            #         'courseCreatedAt': '$course.courseCreatedAt',
+            #         'courseNumber': '$course.courseNumber',
+            #     }
+            # },
+            #
+            # {
+            #     '$project': {
+            #         '_id': 0,
+            #         'studentId': 0,
+            #         'course': 0
+            #     }
+            # }
         ]
 
         result = self.database.aggregate(pipeline)
+        print(result)
         result_list = []
         for r in result:
             attendance = {
