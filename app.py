@@ -82,6 +82,12 @@ def search_student_attendances(user_id):
     return attendance_agg.search_student_attendances(user_id)
 
 
+@app.route('/attendance/update-student-attendance', methods=['PATCH'])
+def update_student_attendances():
+    attendance_agg = AttendanceAgg(mongo.db.attendance)
+    return attendance_agg.update_student_grade(request)
+
+
 # Route for testing
 @app.route('/hello')
 def hello():

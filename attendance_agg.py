@@ -17,11 +17,13 @@ class AttendanceAgg:
         course_teacher = attendance_data["course"]["courseTeacherName"]
         course_teacher_id = attendance_data["course"]["courseTeacherId"]
         course_created_at = dateutil.parser.parse(attendance_data["course"]["courseCreatedAt"])
-        course_number = attendance_data["course"]["courseNumber"]
+        course_number = int(attendance_data["course"]["courseNumber"])
 
         student_id = attendance_data["student"]["studentId"]
         student_name = attendance_data["student"]["studentName"]
         student_class = attendance_data["student"]["classId"]
+
+        grade = attendance_data['grade']['grade']
 
         course_qr = attendance_data["attendanceQR"]
 
@@ -40,6 +42,9 @@ class AttendanceAgg:
                 'courseTeacherId': course_teacher_id,
                 'courseCreatedAt': course_created_at,
                 'courseNumber': course_number
+            },
+            'grade': {
+                'grade': grade
             },
             'attendanceQR': course_qr
         }
@@ -66,6 +71,7 @@ class AttendanceAgg:
                             'courseType': '$course.courseType',
                             'courseNumber': '$course.courseNumber',
                             'courseTeacherName': '$course.courseTeacherName',
+                            'grade': '$grade.grade'
                         }
                     }
                 }
@@ -94,8 +100,9 @@ class AttendanceAgg:
                 course_data = {
                     'courseCreatedAt': str(a["courseCreatedAt"]),
                     'courseType': a["courseType"],
-                    'courseNumber': a["courseNumber"],
+                    'courseNumber': str(a["courseNumber"]),
                     'courseTeacherName': a["courseTeacherName"],
+                    'grade': str(a['grade'])
                 }
                 course_list.append(course_data)
             attendance = {
@@ -152,7 +159,7 @@ class AttendanceAgg:
                 'courseTeacherName': r['courseTeacherName'],
                 'courseTeacherId': r['courseTeacherId'],
                 'courseCreatedAt': str(r['courseCreatedAt']),
-                'courseNumber': r['courseNumber'],
+                'courseNumber': str(r['courseNumber']),
             }
             result_list.append(attendance)
         return json.dumps({'result': result_list})
@@ -185,6 +192,7 @@ class AttendanceAgg:
             course_created_at = str(studentAttendance['course']['courseCreatedAt'])
             course_number = studentAttendance['course']['courseNumber']
             attendance_qr = studentAttendance['attendanceQR']
+            grade = studentAttendance['grade']['grade']
 
             student_attendance_dict = {
                 'eventCreatedAt': event_created_at,
@@ -200,7 +208,10 @@ class AttendanceAgg:
                     'courseTeacherName': course_teacher_name,
                     'courseTeacherId': course_teacher_id,
                     'courseCreatedAt': str(course_created_at),
-                    'courseNumber': course_number
+                    'courseNumber': str(course_number)
+                },
+                'grade': {
+                    'grade': grade
                 },
                 'attendanceQR': attendance_qr
             }
@@ -208,3 +219,22 @@ class AttendanceAgg:
             result_list.append(student_attendance_dict)
 
         return json.dumps({'result': result_list})
+
+    def update_student_grade(self, request):
+        attendance_qr = request.form.get("attendanceQR")
+        student_id = request.form.get("studentId")
+        grade = json.loads(request.form.get("grade"))
+
+        self.database.update(
+            {'attendanceQR': attendance_qr,
+             'student.studentId': student_id},
+            {
+                '$set': {
+                    'grade': {
+                        'grade': grade
+                    }
+                }
+            }
+        )
+
+        return json.dumps({'result': 'true'})
