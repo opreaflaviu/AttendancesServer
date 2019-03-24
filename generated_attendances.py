@@ -45,8 +45,8 @@ class GeneratedAttendanceAgg:
                 'courseCreatedAt': 1}
             },
 
-            {'$project': {'_id': 0}
-            }
+            # {'$project': {'_id': 0}
+            # }
         ]
 
         result = self.database.aggregate(pipeline)
