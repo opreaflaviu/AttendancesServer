@@ -28,16 +28,29 @@ class GeneratedAttendanceAgg:
             'courseNumber': course_number,
             'attendanceQR': attendance_qr
         }
-        insert = self.database.insert(attendance_to_insert)
-        if insert:
-            return json.dumps({'result': 'true'})
-        else:
-            return json.dumps({'result': 'false'})
 
-    def get_teacher_generated_attendances(self, teacher_id):
+        documents = self.database\
+            .find_one({
+                "courseName": course_name,
+                "courseType": course_type,
+                "courseClass": course_class,
+                "courseTeacherId": course_teacher_id,
+                "courseNumber": course_number,
+            })
+        if documents is not None:
+            return json.dumps({'result': 'false'})
+        else:
+            insert = self.database.insert(attendance_to_insert)
+            if insert:
+                return json.dumps({'result': 'true'})
+            else:
+                return json.dumps({'result': 'false'})
+
+    def get_teacher_generated_attendances(self, teacher_id, course_name):
         pipeline = [
             {'$match': {
-                'courseTeacherId': teacher_id}
+                'courseTeacherId': teacher_id,
+                'courseName': course_name}
             },
 
             {'$sort': {
@@ -76,4 +89,37 @@ class GeneratedAttendanceAgg:
         return json.dumps(output)
 
 
+    def get_generated_attendance_data(self, attendance_data):
+        course_name = attendance_data["courseName"]
+        course_type = attendance_data["courseType"]
+        course_class = attendance_data["courseClass"]
+        course_teacher = attendance_data["courseTeacherName"]
+        course_teacher_id = attendance_data["courseTeacherId"]
+        course_created_at = dateutil.parser.parse(attendance_data["courseCreatedAt"])
+        course_number = attendance_data["courseNumber"]
+        attendance_qr = attendance_data["attendanceQR"]
 
+        attendance_to_insert = {
+            'courseName': course_name,
+            'courseType': course_type,
+            'courseClass': course_class,
+            'courseTeacherName': course_teacher,
+            'courseTeacherId': course_teacher_id,
+            'courseCreatedAt': course_created_at,
+            'courseNumber': course_number,
+            'attendanceQR': attendance_qr
+        }
+
+        return attendance_to_insert
+
+    #remove generated attendances by attendanceQR field
+    def remove_generated_attendance(self, request):
+        attendance_qr = request.form.get("attendanceQR")
+
+        delete_result = self.database.delete_many({
+            "attendanceQR": attendance_qr
+        })
+
+        deleted_documents = delete_result.deleted_count
+        output = {'deletedCount': deleted_documents}
+        return json.dumps(output)

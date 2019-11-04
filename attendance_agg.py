@@ -9,50 +9,18 @@ class AttendanceAgg:
 
     def insert_attendance(self, request):
         attendance_data = json.loads(request.form.get("attendance"))
-
-        event_created_at = dateutil.parser.parse(attendance_data["eventCreatedAt"])
-        course_name = attendance_data["course"]["courseName"]
-        course_type = attendance_data["course"]["courseType"]
-        course_class = attendance_data["course"]["courseClass"]
-        course_teacher = attendance_data["course"]["courseTeacherName"]
-        course_teacher_id = attendance_data["course"]["courseTeacherId"]
-        course_created_at = dateutil.parser.parse(attendance_data["course"]["courseCreatedAt"])
-        course_number = int(attendance_data["course"]["courseNumber"])
-
-        student_id = attendance_data["student"]["studentId"]
-        student_name = attendance_data["student"]["studentName"]
-        student_class = attendance_data["student"]["classId"]
-
-        grade = attendance_data['grade']['grade']
-
         course_qr = attendance_data["attendanceQR"]
 
-        attendance_to_insert = {
-            'eventCreatedAt': event_created_at,
-            'student': {
-                'studentId': student_id,
-                'studentName': student_name,
-                'classId': student_class
-            },
-            'course': {
-                'courseName': course_name,
-                'courseType': course_type,
-                'courseClass': course_class,
-                'courseTeacherName': course_teacher,
-                'courseTeacherId': course_teacher_id,
-                'courseCreatedAt': course_created_at,
-                'courseNumber': course_number
-            },
-            'grade': {
-                'grade': grade
-            },
-            'attendanceQR': course_qr
-        }
-        insert = self.database.insert(attendance_to_insert)
-        if insert:
-            return json.dumps({'result': 'true'})
-        else:
+        documents = self.database.find_one({'attendanceQR': course_qr})
+        if documents is not None:
             return json.dumps({'result': 'false'})
+        else:
+            attendance_to_insert = self.get_attendance_data(attendance_data)
+            insert = self.database.insert(attendance_to_insert)
+            if insert:
+                return json.dumps({'result': 'true'})
+            else:
+                return json.dumps({'result': 'false'})
 
     def get_student_attendances(self, user_id):
         pipeline = [
@@ -100,9 +68,9 @@ class AttendanceAgg:
                 course_data = {
                     'courseCreatedAt': str(a["courseCreatedAt"]),
                     'courseType': a["courseType"],
-                    'courseNumber': str(a["courseNumber"]),
+                    'courseNumber': int(a["courseNumber"]),
                     'courseTeacherName': a["courseTeacherName"],
-                    'grade': str(a['grade'])
+                    'grade': int(a['grade'])
                 }
                 course_list.append(course_data)
             attendance = {
@@ -159,7 +127,7 @@ class AttendanceAgg:
                 'courseTeacherName': r['courseTeacherName'],
                 'courseTeacherId': r['courseTeacherId'],
                 'courseCreatedAt': str(r['courseCreatedAt']),
-                'courseNumber': str(r['courseNumber']),
+                'courseNumber': r['courseNumber'],
             }
             result_list.append(attendance)
         return json.dumps({'result': result_list})
@@ -208,7 +176,7 @@ class AttendanceAgg:
                     'courseTeacherName': course_teacher_name,
                     'courseTeacherId': course_teacher_id,
                     'courseCreatedAt': str(course_created_at),
-                    'courseNumber': str(course_number)
+                    'courseNumber': int(course_number)
                 },
                 'grade': {
                     'grade': grade
@@ -238,3 +206,86 @@ class AttendanceAgg:
         )
 
         return json.dumps({'result': 'true'})
+
+    def get_group_data(self, course_name, class_id):
+        pipeline = [
+            {
+                '$match': {
+                    'course.courseName': course_name,
+                    'student.classId': class_id}
+            },
+            {
+                '$group': {
+                    '_id': '$student.studentName',
+                    'studentId': {'$first': '$student.studentId'},
+                    'events': {
+                        '$push': {
+                            'courseCreatedAt': '$eventCreatedAt',
+                            'courseType': '$course.courseType',
+                            'courseNumber': '$course.courseNumber',
+                            'courseTeacherName': '$course.courseTeacherName',
+                            'grade': '$grade.grade'
+                        }
+                    }
+                }
+            }
+        ]
+        result = self.database.aggregate(pipeline)
+        result_list = []
+
+        for data in result:
+            result_list.append(data)
+
+        return result_list
+
+    def get_attendance_data(self, attendance_data):
+        event_created_at = dateutil.parser.parse(attendance_data["eventCreatedAt"])
+        course_name = attendance_data["course"]["courseName"]
+        course_type = attendance_data["course"]["courseType"]
+        course_class = attendance_data["course"]["courseClass"]
+        course_teacher = attendance_data["course"]["courseTeacherName"]
+        course_teacher_id = attendance_data["course"]["courseTeacherId"]
+        course_created_at = dateutil.parser.parse(attendance_data["course"]["courseCreatedAt"])
+        course_number = int(attendance_data["course"]["courseNumber"])
+
+        student_id = attendance_data["student"]["studentId"]
+        student_name = attendance_data["student"]["studentName"]
+        student_class = attendance_data["student"]["classId"]
+
+        grade = attendance_data['grade']['grade']
+
+        course_qr = attendance_data["attendanceQR"]
+
+        attendance_to_insert = {
+            'eventCreatedAt': event_created_at,
+            'student': {
+                'studentId': student_id,
+                'studentName': student_name,
+                'classId': student_class
+            },
+            'course': {
+                'courseName': course_name,
+                'courseType': course_type,
+                'courseClass': course_class,
+                'courseTeacherName': course_teacher,
+                'courseTeacherId': course_teacher_id,
+                'courseCreatedAt': course_created_at,
+                'courseNumber': course_number
+            },
+            'grade': {
+                'grade': grade
+            },
+            'attendanceQR': course_qr
+        }
+
+        return attendance_to_insert
+
+    def remove_generated_attendance(self, request):
+        attendance_qr = request.form.get("attendanceQR")
+
+        delete_result = self.database.delete_many({
+            "attendanceQR": attendance_qr
+        })
+
+        deleted_documents = delete_result.deleted_count
+        print('deleted documents from Attendance: ', deleted_documents)
