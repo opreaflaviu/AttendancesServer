@@ -1,4 +1,3 @@
-
 from flask_pymongo import PyMongo
 from flask import Flask, request, send_file
 
@@ -11,10 +10,10 @@ from xls_file_generator import XLS_File_Generator
 app = Flask(__name__)
 
 # For development
-app.config["MONGO_URI"] = 'mongodb://localhost:27017/UBB_App'
+# app.config["MONGO_URI"] = 'mongodb://localhost:27017/UBB_App'
 
 # For production
-# app.config["MONGO_URI"] = 'mongodb://linux.scs.ubbcluj.ro:27017/studentsStats'
+app.config["MONGO_URI"] = 'mongodb://linux.scs.ubbcluj.ro:27017/studentsStats'
 
 mongo = PyMongo(app)
 
